@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.joekir.indelible";
+option java_outer_classname = "indelibleProto";
+import "google/protobuf/empty.proto";
+
+package servicepb;
+
+service LogCreator {
+  rpc CreateLog (LogFileRequest) returns (google.protobuf.Empty) {}
+}
+
+message LogFileRequest {
+  string Path = 1;
+}
