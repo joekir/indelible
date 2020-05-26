@@ -1,17 +1,20 @@
 # indelible
 
-A service to create an append-only log file to which it cannot read or clobbered.
+A side-car service that can run with Linux capability `CAP_LINUX_IMMUTABLE` so that it can set your service's log files to append-only but not read, write to them, nor does it have the capability to remove the append-only setting once set.
+
+This is intended for secure environments where you do not want an attacker to be able to erase log traces post-compromise of your service.
 
 # Preamble
 
 ext3/ext4 file systems have extended attributes (xattr) available on them.
-One of value is the append-only attribute
+One cool one is the append-only attribute
 
 e.g. 
 
 ```
 $ touch /tmp/foo.txt
 $ chattr +a /tmp/foo.txt
+$ setpriv --inh-caps=-linux_immutable --bounding-set=-linux_immutable bash
 $ echo "blah" >> /tmp/foo.txt
 ```
 
@@ -34,16 +37,36 @@ $ go test -c
 $ sudo ./indelible.test
 ```
 
-# Deployment
+# Running in container
+
+Here we build the service and the example client, we also drop the priviliges in the container
 
 ```
-$ sudo setcap cap_linux_immutable,cap_net_raw=ep indelible
-$ getcap indelible
-indelible = cap_linux_immutable,cap_net_raw+ep
-// eip stands for effective,inheritable,permitted
+$ ./docker_run.sh golang:1.13.11-buster
+root@25a0b3ae394a:/go# capsh --print | grep immutable # we have the capability here
+root@25a0b3ae394a:/go# cd src/indelible/
+root@25a0b3ae394a:/go/src/indelible# go build
+go: downloadin
+  ...
+
+root@25a0b3ae394a:/go/src/indelible# nohup ./indelible &
+root@25a0b3ae394a:/go/src/indelible# cd exampleclient/
+root@25a0b3ae394a:/go/src/indelible# setpriv --no-new-privs --inh-caps=-linux_immutable --bounding-set=-linux_immutable bash
+root@25a0b3ae394a:/go# capsh --print | grep immutable # we do not have the capability here
+root@25a0b3ae394a:/go/src/indelible/exampleclient# go build
+go: downloading
+  ...
+root@25a0b3ae394a:/go/src/indelible/exampleclient# ./exampleclient
+Creating log file at /var/log/immutable.log
+Requesting log file (/var/log/immutable.log) be marked append-only...
+success
+root@25a0b3ae394a:/go/src/indelible/exampleclient# echo "test line" > /var/log/immutable.log
+bash: /var/log/immutable.log: Operation not permitted
+root@25a0b3ae394a:/go/src/indelible/exampleclient# echo "test line" >> /var/log/immutable.log
+root@25a0b3ae394a:/go/src/indelible/exampleclient# cat /var/log/immutable.log
+test line
 ```
 
-then you can run indelible as non-sudo/non-root and it will still have the append only and sock creation abilities.
 
 # References
 

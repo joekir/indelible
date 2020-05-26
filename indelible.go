@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/signal"
 	"path"
-	"path/filepath"
 	"syscall"
 	"unsafe"
 
@@ -74,12 +73,7 @@ func cleanup(socketpath string) {
 }
 
 func main() {
-	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
-	if err != nil {
-		log.Fatalf("Unable to read current directory: %v", err)
-	}
-
-	socketpath := path.Join(dir, sockname)
+	socketpath := path.Join("/tmp", sockname)
 
 	// Remove previously existing sock file
 	syscall.Unlink(socketpath)
