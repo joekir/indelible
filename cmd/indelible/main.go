@@ -11,7 +11,7 @@ import (
 	"unsafe"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	pb "github.com/joekir/indelible/servicepb"
+	pb "github.com/joekir/indelible/rpc/indelible"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

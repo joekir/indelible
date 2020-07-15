@@ -30,11 +30,8 @@ you'll notice this works well but you cannot delete the text once written, only 
 # Running Tests
 
 ```
-// Build a test binary
-$ go test -c 
-// Run a test binary with priviliges as 
-// Service needs to run as "CAP_LINUX_IMMUTABLE"
-$ sudo ./indelible.test
+$ ./scripts/docker_run.sh golang:1.13.11-buster
+root@f1f364477f41:/go# go test ./...
 ```
 
 # Running in container
@@ -42,28 +39,28 @@ $ sudo ./indelible.test
 Here we build the service and the example client, we also drop the priviliges in the container
 
 ```
-$ ./docker_run.sh golang:1.13.11-buster
+$ ./scripts/docker_run.sh golang:1.13.11-buster
 root@25a0b3ae394a:/go# capsh --print | grep immutable # we have the capability here
 root@25a0b3ae394a:/go# cd src/indelible/
-root@25a0b3ae394a:/go/src/indelible# go build
+root@25a0b3ae394a:/go/src/indelible# go build ./cmd/indelible
 go: downloadin
   ...
 
 root@25a0b3ae394a:/go/src/indelible# nohup ./indelible &
-root@25a0b3ae394a:/go/src/indelible# cd exampleclient/
+root@25a0b3ae394a:/go/src/indelible# cd examples/client/
 root@25a0b3ae394a:/go/src/indelible# setpriv --no-new-privs --inh-caps=-linux_immutable --bounding-set=-linux_immutable bash
 root@25a0b3ae394a:/go# capsh --print | grep immutable # we do not have the capability here
-root@25a0b3ae394a:/go/src/indelible/exampleclient# go build
+root@25a0b3ae394a:/go/src/indelible/examples/client# go build
 go: downloading
   ...
-root@25a0b3ae394a:/go/src/indelible/exampleclient# ./exampleclient
+root@25a0b3ae394a:/go/src/indelible/examples/client# ./client
 Creating log file at /var/log/immutable.log
 Requesting log file (/var/log/immutable.log) be marked append-only...
 success
-root@25a0b3ae394a:/go/src/indelible/exampleclient# echo "test line" > /var/log/immutable.log
+root@25a0b3ae394a:/go/src/indelible/examples/client# echo "test line" > /var/log/immutable.log
 bash: /var/log/immutable.log: Operation not permitted
-root@25a0b3ae394a:/go/src/indelible/exampleclient# echo "test line" >> /var/log/immutable.log
-root@25a0b3ae394a:/go/src/indelible/exampleclient# cat /var/log/immutable.log
+root@25a0b3ae394a:/go/src/indelible/examples/client# echo "test line" >> /var/log/immutable.log
+root@25a0b3ae394a:/go/src/indelible/examples/client# cat /var/log/immutable.log
 test line
 ```
 

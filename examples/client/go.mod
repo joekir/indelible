@@ -1,4 +1,4 @@
-module github.com/joekir/indelible/exampleclient
+module github.com/joekir/indelible/examples/client
 
 go 1.13
 
